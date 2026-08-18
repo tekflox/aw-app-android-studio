@@ -1,0 +1,126 @@
+{
+  "manifest_version": 1,
+  "id": "android-studio",
+  "name": "Android Studio",
+  "version": "0.1.0",
+  "description": "Automate any Android device or emulator over ADB — tap, swipe, type, screenshot, install/inspect apps, push and pull files — reached through a linked host via aw-remote-hosts. No fixed machine: point it at whichever remote host and adb binary you configure, per-call overrides included.",
+  "icon": "smartphone",
+  "category": "Integrations",
+  "tier": "inprocess",
+  "requires_ui_refresh": true,
+  "publisher": "TekFlox",
+  "resource_estimate": {
+    "cpu": "low",
+    "memory": "low",
+    "disk": "low"
+  },
+  "runtime": {
+    "python": ">=3.11",
+    "entrypoint": "android_studio_app.plugin:AndroidStudioAppPlugin",
+    "pip_requires": []
+  },
+  "permissions": [
+    "routes:register",
+    "secrets:own",
+    "net:outbound"
+  ],
+  "contributes": {
+    "routes": [
+      {
+        "prefix": "/api/apps/android-studio"
+      }
+    ],
+    "windows": [
+      {
+        "id": "android-studio.main",
+        "title": "Android Studio",
+        "icon": "smartphone",
+        "body": {
+          "type": "declarative",
+          "spec": "windows/main.json"
+        }
+      }
+    ],
+    "settings_panels": [
+      {
+        "id": "android-studio.settings",
+        "window": "android-studio.main"
+      }
+    ],
+    "mcp": {
+      "reload_on_save": false,
+      "provides": [
+        "adb_devices",
+        "adb_shell",
+        "adb_tap",
+        "adb_swipe",
+        "adb_text",
+        "adb_keyevent",
+        "adb_screenshot",
+        "adb_push",
+        "adb_launch_app",
+        "adb_stop_app",
+        "adb_list_packages",
+        "adb_media_scan",
+        "upload_file"
+      ]
+    },
+    "skills": [
+      {
+        "id": "aw-android-studio",
+        "path": "skills/aw-android-studio/SKILL.md",
+        "description": "Automate an Android device/emulator over ADB via a linked aw-remote-hosts machine — finding the device, tap/swipe by coordinate, screenshotting and pulling it into the workspace, installing/launching apps. Use for anything about \"the Android emulator\", ADB automation, or piloting an Android app."
+      }
+    ]
+  },
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "remote_backend_url": {
+        "type": "string",
+        "description": "aw-backend base URL that fronts aw-remote-hosts, e.g. https://api.aw.tekflox.com. Every adb call and file transfer goes through {url}/api/workspaces/{remote_workspace}/remote-hosts/{remote_host_id}/... . Set all three remote_backend_url/remote_workspace/remote_token or none — with any one missing the tools fail explicitly naming what's absent rather than guessing a host."
+      },
+      "remote_workspace": {
+        "type": "string",
+        "description": "The CALLING workspace's own slug (e.g. 'aw') — NOT the slug the target host happens to be registered under. aw-backend resolves host ownership server-side, so a host linked to a different workspace of yours is still reached via this workspace's own slug. Using the host's slug here returns 401."
+      },
+      "remote_token": {
+        "type": "string",
+        "x-secret": true,
+        "description": "Bearer token for aw-backend — this workspace's AW_WORKSPACE_HOST_TOKEN (from the aw-remote-host /link handshake). Routed to the zero-knowledge secret store via POST /api/apps/android-studio/settings — never stored in plain config."
+      },
+      "remote_host_id": {
+        "type": "string",
+        "default": "824decc7e0610089",
+        "description": "Id of the linked host running adb, from 'aw-workspace-cli remote-hosts hosts'. Defaults to Frederico's Mac.Home. Every tool accepts a per-call remote_host_id override."
+      },
+      "adb_path": {
+        "type": "string",
+        "default": "~/Android/platform-tools/adb",
+        "description": "Full path to the adb binary on the REMOTE host's filesystem — adb is typically not on PATH in that machine's non-interactive exec shell. A leading ~ is expanded against the remote host's own home, not this workspace's. Every tool accepts a per-call adb_path override."
+      },
+      "default_device_serial": {
+        "type": "string",
+        "description": "Optional device/emulator serial (as shown by adb_devices) to target when the remote host has more than one device attached. Leave empty when only one device is attached — adb targets it automatically. Every tool accepts a per-call device override."
+      },
+      "screenshot_dir": {
+        "type": "string",
+        "default": ".tmp/android-studio/",
+        "description": "Directory on THIS workspace's own filesystem where adb_screenshot saves PNGs, relative to the workspace root. Every call accepts a local_path override."
+      }
+    },
+    "required": []
+  },
+  "dependencies": {
+    "apps": [
+      {
+        "id": "mcp-gateway",
+        "version": ">=0.1.0",
+        "required": true,
+        "reason": "This app contributes an mcp.json entry (the 'aw-android-studio' server) that MCP Gateway discovers and merges; without the gateway no agent can reach its tools."
+      }
+    ],
+    "note": "Runtime-enforced app dependency: aw-workspace loads mcp-gateway before this app so the gateway can scan android-studio/mcp.json."
+  },
+  "migrations": {}
+}
