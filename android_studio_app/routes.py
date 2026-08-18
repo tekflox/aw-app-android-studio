@@ -20,17 +20,6 @@ from .mcp import adb_tools, remote_host
 SECRET_KEY = "remote_token"
 
 
-def _plain_config(ctx) -> dict:
-    return {
-        "remote_backend_url": ctx.config.get("remote_backend_url") or "",
-        "remote_workspace": ctx.config.get("remote_workspace") or "",
-        "remote_host_id": ctx.config.get("remote_host_id") or "",
-        "adb_path": ctx.config.get("adb_path") or "",
-        "default_device_serial": ctx.config.get("default_device_serial") or "",
-        "screenshot_dir": ctx.config.get("screenshot_dir") or "",
-    }
-
-
 def build_routes(ctx) -> FastAPI:
     app = FastAPI(title="android-studio")
 
@@ -42,7 +31,7 @@ def build_routes(ctx) -> FastAPI:
             "logged_in": bool(token),
             "configured": remote_host.configured(),
             "missing": remote_host.missing_settings(),
-            "remote_host_id": ctx.config.get("remote_host_id") or "",
+            "remote_host_id": adb_tools.current_config().get("remote_host_id") or "",
             "tools": [t["name"] for t in adb_tools.TOOLS],
             "mcp_server": mcp_config.SERVER_NAME,
         }

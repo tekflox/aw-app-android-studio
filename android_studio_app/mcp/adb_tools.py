@@ -50,6 +50,14 @@ def _cfg() -> dict:
         return {}
 
 
+def current_config() -> dict:
+    """The resolved config (including this app's own schema-default
+    fallbacks — see plugin.py's ``_SCHEMA_DEFAULTS``), for display purposes.
+    routes.py's ``/status`` uses this instead of reading ``ctx.config``
+    directly so the Settings UI shows what a tool call will actually use."""
+    return _cfg()
+
+
 def _workspace_root() -> str:
     return os.environ.get("AW_WORKSPACE_CONTAINER_DIR", "/opt/aw-workspace")
 
