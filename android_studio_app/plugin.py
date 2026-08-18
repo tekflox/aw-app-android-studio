@@ -19,6 +19,23 @@ from .mcp import adb_tools, remote_host
 
 log = logging.getLogger("aw_apps.android-studio")
 
+# Mirrors aw-app.json's config_schema `default` values. Needed because core's
+# Tier-1 (inprocess) activation path hands the plugin the raw stored config
+# with NO schema-default merge — only the Tier-2 (container) path and the
+# settings-UI display route apply `manifest.config_with_defaults()` (see
+# aw-workspace src/apps/runtime.py: `_load_container` calls it explicitly
+# with a comment citing exactly this failure mode from aw-app-crispal;
+# `load()`'s inprocess branch a few lines up does not). Confirmed live on
+# 2026-08-18: a freshly installed app reported `remote_host_id: ""` despite
+# the manifest declaring "824decc7e0610089" as its default. Until that gap
+# is fixed in core, every Tier-1 app with a config_schema default has to
+# fall back to it here itself.
+_SCHEMA_DEFAULTS = {
+    "remote_host_id": "824decc7e0610089",
+    "adb_path": adb_tools.DEFAULT_ADB_PATH,
+    "screenshot_dir": adb_tools.DEFAULT_SCREENSHOT_DIR,
+}
+
 
 class AndroidStudioAppPlugin:
     async def activate(self, ctx) -> None:
@@ -29,10 +46,10 @@ class AndroidStudioAppPlugin:
                 "remote_backend_url": ctx.config.get("remote_backend_url") or "",
                 "remote_workspace": ctx.config.get("remote_workspace") or "",
                 "remote_token": ctx.secrets.read(routes_mod.SECRET_KEY) or "",
-                "remote_host_id": ctx.config.get("remote_host_id") or "",
-                "adb_path": ctx.config.get("adb_path") or "",
+                "remote_host_id": ctx.config.get("remote_host_id") or _SCHEMA_DEFAULTS["remote_host_id"],
+                "adb_path": ctx.config.get("adb_path") or _SCHEMA_DEFAULTS["adb_path"],
                 "default_device_serial": ctx.config.get("default_device_serial") or "",
-                "screenshot_dir": ctx.config.get("screenshot_dir") or "",
+                "screenshot_dir": ctx.config.get("screenshot_dir") or _SCHEMA_DEFAULTS["screenshot_dir"],
             }
 
         remote_host.set_config_resolver(_resolve_config)
