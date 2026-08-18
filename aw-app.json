@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "id": "android-studio",
   "name": "Android Studio",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Automate any Android device or emulator over ADB \u2014 tap, swipe, type, screenshot, install/inspect apps, push and pull files \u2014 reached through a linked host via aw-remote-hosts. No fixed machine: point it at whichever remote host and adb binary you configure, per-call overrides included.",
   "icon": "smartphone",
   "category": "Integrations",
